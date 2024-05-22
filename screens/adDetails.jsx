@@ -61,7 +61,7 @@ const AdDetails = ({ route, navigation }) => {
     description: {
       fontSize: 16,
       padding: 20,
-      height: height * 0.2
+      height: height * 0.4
     },
     imageContainer: {
       height: height * 0.5, 

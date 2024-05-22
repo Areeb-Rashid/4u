@@ -1,111 +1,138 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Image, Text, StyleSheet, Dimensions, View, RefreshControl, TouchableOpacity, Alert } from "react-native";
 import { FlatList, GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "./firebase";
-import { collection, getFirestore, doc, getDoc } from "firebase/firestore";
+import { collection, getFirestore, getDocs, query, where, doc, getDoc } from "firebase/firestore";
 
-const Home = ({navigation}) => {
+const Home = ({ navigation }) => {
   const height = Dimensions.get("screen").height;
   const width = Dimensions.get("screen").width;
 
   const [refreshing, setRefreshing] = useState(false);
   const [seller, setSeller] = useState(false);
+  const [row1Data, setRow1Data] = useState([]);
+  const [row2Data, setRow2Data] = useState([]);
+  const [categoriesData, setCategoriesData] = useState([]);
 
-  const checkSeller = async ()=>{
+  const checkSeller = async () => {
     const user = auth.currentUser;
-    const uid = user.uid;
-    const firestore = getFirestore();
-    const userDocRef = doc(collection(firestore,'users'), uid);
-    const userDoc = await getDoc(userDocRef);
+    if (user) {
+      const uid = user.uid;
+      const firestore = getFirestore();
+      const userDocRef = doc(collection(firestore, 'users'), uid);
+      const userDoc = await getDoc(userDocRef);
 
-    if (userDoc.exists()){
-      const userData = userDoc.data();
-      const accountType = userData.accountType;
-      if(accountType == 'Seller' ){
-        setSeller(true)
-      }else{
-        setSeller(false)
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const accountType = userData.accountType;
+        if (accountType === 'Seller') {
+          setSeller(true);
+        } else {
+          setSeller(false);
+        }
+      } else {
+        Alert.alert('User does not exist');
       }
-    }else{
-      Alert.alert('User does not exist ')
+    } else {
+      Alert.alert('User not logged in');
     }
-
-  }
-
-  useEffect(()=>{
-    checkSeller()
-  },[])
-
-  const handleFAB = ()=>{
-    navigation.navigate('AddItem')
-  }
-  const onRefresh = () => {
-    setRefreshing(true);
-
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 2000); 
   };
 
-  const Row1Data = [
-    { key: 1, text: "Morning Dress", imageUrl: require("../assets/photo4.png") },
-    { key: 2, text: "Evening Dress", imageUrl: require("../assets/photo.png") },
-    { key: 3, text: "Night Dress", imageUrl: require("../assets/photo2.png") },
-    { key: 4, text: "Sport Dress", imageUrl: require("../assets/photo7.png") }
-  ];
+  const fetchAdsData = async () => {
+    try {
+      const firestore = getFirestore();
+      const usersCollRef = collection(firestore, 'users');
+      
+      const sellersQuery = query(usersCollRef, where('accountType', '==', 'Seller'));
+      const sellersSnapshot = await getDocs(sellersQuery);
 
-  const Row2Data = [
-    { key: 1, text: "Morning", imageUrl: require("../assets/photo5.png") },
-    { key: 2, text: "Evening", imageUrl: require("../assets/photo6.png") },
-    { key: 3, text: "Night", imageUrl: require("../assets/photo17.png") },
-    { key: 4, text: "Sport", imageUrl: require("../assets/photo6.png") }
-  ];
+      let allAdsData = [];
 
-  const CategoriesData = [
-    { key: 1, text: "Kids", imageUrl: require("../assets/photo5.png") },
-    { key: 2, text: "Vehicles", imageUrl: require("../assets/photo5.png") },
-    { key: 3, text: "Mobiles", imageUrl: require("../assets/photo5.png") },
-    { key: 4, text: "Jeans", imageUrl: require("../assets/photo5.png") },
-    { key: 5, text: "Clothes", imageUrl: require("../assets/photo5.png") },
+      for (const sellerDoc of sellersSnapshot.docs) {
+        const adsCollRef = collection(sellerDoc.ref, 'ads');
+        const adsSnapshot = await getDocs(adsCollRef);
 
-  ]
+        const adsData = adsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allAdsData = [...allAdsData, ...adsData];
+      }
 
-  const Row1Render = ({ item }) => {
-    return (
+
+      const womenAds = allAdsData.filter(ad => ad.category === 'Women');
+      const menAds = allAdsData.filter(ad => ad.category === 'Men');
+      const categories = [...new Set(allAdsData.map(ad => ad.category))].map(category => ({
+        key: category,
+        text: category,
+        imageUrl: { uri: allAdsData.find(ad => ad.category === category).image1 }
+      }));
+
+      setRow1Data(womenAds);
+      setRow2Data(menAds);
+      setCategoriesData(categories);
+
+    
+    } catch (error) {
+      Alert.alert(error.message);
+    }
+  };
+
+  useEffect(() => {
+    checkSeller();
+    fetchAdsData();
+  }, []);
+
+  const handleFAB = () => {
+    navigation.navigate('AddItem');
+  };
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchAdsData().then(() => {
+      setRefreshing(false);
+    }).catch(() => {
+      setRefreshing(false);  // Ensure refreshing is reset in case of error
+    });
+  }, []);
+
+  const Row1Render = ({ item }) => (
+    <TouchableOpacity onPress={() => navigation.navigate('AdDetails', { item })}>
       <View style={styles.rowItem1}>
-        <Image style={styles.imageRow1} source={item.imageUrl} resizeMode="center" />
+        <Image style={styles.imageRow1} source={{ uri: item.image1 }} resizeMode="center" />
         <Text style={styles.textR1}>{item.text}</Text>
       </View>
-    );
-  };
-
-  const Row2Render = ({ item }) => {
-    return (
+    </TouchableOpacity>
+  );
+  
+  const Row2Render = ({ item }) => (
+    <TouchableOpacity onPress={() => navigation.navigate('AdDetails', { item })}>
       <View style={styles.rowItem2}>
-        <Image style={styles.imageRow2} source={item.imageUrl} resizeMode="center" />
+        <Image style={styles.imageRow2} source={{ uri: item.image1 }} resizeMode="center" />
         <Text style={styles.textR2}>{item.text}</Text>
       </View>
-    );
-  };
+    </TouchableOpacity>
+  );
+  
 
-  const CategoriesRender = ({ item }) => {
-    return (
-      <View style={{marginRight:10, width:width*0.3, height:height*0.35}}>
+  const CategoriesRender = ({ item }) => (
+    <TouchableOpacity onPress={() => {
+      navigation.navigate('AdDetails', { item })
+      console.log({item})
+      }}>
+      <View style={{ marginRight: 10, width: width * 0.3, height: height * 0.35 }}>
         <Image style={styles.cateImage} source={item.imageUrl} resizeMode="cover" />
         <Text style={styles.categoriesItemText}>{item.text}</Text>
       </View>
-    );
-  };
-
+    </TouchableOpacity>
+  );
+  
   const styles = StyleSheet.create({
     firstBanner: {
       width: width,
       // height:height
     },
     firstBannerText: {
-      top:height*0.18,
+      top: height * 0.18,
       position: "absolute",
       color: "white",
       fontSize: 23,
@@ -116,9 +143,7 @@ const Home = ({navigation}) => {
     },
     row1: {
       width: width,
-      // height:height*0.30 
-      // backgroundColor:'red',
-      height:height*0.4
+      height: height * 0.4
     },
     rowItem1: {
       width: width * 0.3,
@@ -171,35 +196,32 @@ const Home = ({navigation}) => {
     rowItem2: {
       width: width * 0.3,
       marginHorizontal: 20,
-      height: height *0.32
+      height: height * 0.32
     },
-    cateImage:{
+    cateImage: {
       position: 'absolute',
       top: height * 0.12,
       height: 100,
       width: 100,
       overflow: 'hidden',
-      borderRadius:50
+      borderRadius: 50
     },
-    category:{
-      width:width,
-
+    category: {
+      width: width,
     },
-    categoriesText:{
-      top:height*0.045,
+    categoriesText: {
+      top: height * 0.045,
       fontWeight: 'bold',
       fontSize: 30,
       marginLeft: 15,
-      position:"absolute",
-
+      position: "absolute",
     },
     categoriesItemText: {
-      position:'absolute',
-      top:height*0.24,
-      padding:20,
-      fontWeight:'bold',
-      paddingLeft:40
-      
+      position: 'absolute',
+      top: height * 0.24,
+      padding: 20,
+      fontWeight: 'bold',
+      paddingLeft: 40
     },
     fab: {
       position: 'absolute',
@@ -224,80 +246,76 @@ const Home = ({navigation}) => {
       fontSize: 24,
       color: 'white',
     },
-    
   });
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <View style={styles.container} >
-      <ScrollView 
-      style={{flex:1}}
-      showsVerticalScrollIndicator={false} 
-       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={['#0000ff']} 
-          tintColor={'#0000ff'} 
-        />
-      }
-
-      >
-        <SafeAreaView >
-          {/* First Image  */}
-          <Image style={styles.firstBanner} source={require("../assets/small-banner.png")} />
-          <Text style={styles.firstBannerText}>Street Clothes</Text>
-
-          {/* Row 1 */}
-          <View style={styles.row1}>
-            <Text style={styles.womenText}>
-              Women (Coffee)
-            </Text>
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false} 
-              data={Row1Data}
-              renderItem={Row1Render}
-              keyExtractor={(item) => item.key.toString()}
+      <View style={styles.container}>
+        <ScrollView
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#0000ff']}
+              tintColor={'#0000ff'}
             />
-          </View>
+          }
+        >
+          <SafeAreaView>
+            {/* First Image */}
+            <Image style={styles.firstBanner} source={require("../assets/small-banner.png")} />
+            <Text style={styles.firstBannerText}>Street Clothes</Text>
 
-          {/* Row 2 */}
-          <View style={styles.row2}>
-            <Text style={styles.menText}>
-              Men's Collection
-            </Text>
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false} 
-              data={Row2Data}
-              renderItem={Row2Render}
-              keyExtractor={(item) => item.key.toString()}
-            />
-          </View>
+            {/* Row 1 */}
+            <View style={styles.row1}>
+              <Text style={styles.womenText}>
+                Women's Collection
+              </Text>
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={row1Data}
+                renderItem={Row1Render}
+                keyExtractor={(item) => item.id.toString()}
+              />
+            </View>
 
-          {/* Categories  */}
-          <View style={styles.category}>
-          <Text style={styles.categoriesText}>
-             Categories
-          </Text>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false} 
-          data={CategoriesData}
-          renderItem={CategoriesRender}
-          keyExtractor={(item) => item.key.toString()}
-        />
-          </View>
-        </SafeAreaView>
-      </ScrollView>
-      {seller && (
-    <TouchableOpacity style={styles.fab} onPress={handleFAB}>
-    <Ionicons name="add" style={styles.fabIcon} />
-    </TouchableOpacity>
-)}
+            {/* Row 2 */}
+            <View style={styles.row2}>
+              <Text style={styles.menText}>
+                Men's Collection
+              </Text>
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={row2Data}
+                renderItem={Row2Render}
+                keyExtractor={(item) => item.id.toString()}
+              />
+            </View>
 
-
+            {/* Categories */}
+            <View style={styles.category}>
+              <Text style={styles.categoriesText}>
+                Categories
+              </Text>
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={categoriesData}
+                renderItem={CategoriesRender}
+                keyExtractor={(item) => item.key.toString()}
+              />
+            </View>
+          </SafeAreaView>
+        </ScrollView>
+        {seller && (
+          <TouchableOpacity style={styles.fab} onPress={handleFAB}>
+            <Ionicons name="add" style={styles.fabIcon} />
+          </TouchableOpacity>
+        )}
       </View>
     </GestureHandlerRootView>
   );

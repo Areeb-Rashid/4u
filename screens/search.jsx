@@ -4,9 +4,7 @@ import { Alert, Dimensions, StyleSheet, Text,
     TextInput, View, FlatList, TouchableOpacity, 
     Image, SafeAreaView, RefreshControl } from "react-native";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
-// import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, getFirestore, getDocs, query, where } from "firebase/firestore";
-import { auth } from "./firebase";
 
 const Search = ({navigation}) => {
   const height = Dimensions.get('screen').height;
@@ -90,7 +88,7 @@ const Search = ({navigation}) => {
       marginTop: 3,
     },
     gridImage: {
-      width: width*0.45,
+      width: '100%',
       height: height*0.12,
     //   borderRadius: 50,
     borderWidth:1,

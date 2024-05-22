@@ -9,7 +9,7 @@ const Authentication =({navigation})=>{
           const userData = await AsyncStorage.getItem('user');
   
           if (userData) {
-            // User data found in AsyncStorage
+            // User data found in AsyncStorage 
             // const user = JSON.parse(userData);
             // console.log('User found in AsyncStorage:', user);
             navigation.navigate('BottomNavigation');
