@@ -44,7 +44,7 @@ const Home = ({ navigation }) => {
     try {
       const firestore = getFirestore();
       const usersCollRef = collection(firestore, 'users');
-      
+
       const sellersQuery = query(usersCollRef, where('accountType', '==', 'Seller'));
       const sellersSnapshot = await getDocs(sellersQuery);
 
@@ -71,7 +71,7 @@ const Home = ({ navigation }) => {
       setRow2Data(menAds);
       setCategoriesData(categories);
 
-    
+
     } catch (error) {
       Alert.alert(error.message);
     }
@@ -91,19 +91,19 @@ const Home = ({ navigation }) => {
     fetchAdsData().then(() => {
       setRefreshing(false);
     }).catch(() => {
-      setRefreshing(false); 
+      setRefreshing(false);
     });
   }, []);
 
   const Row1Render = ({ item }) => (
     <TouchableOpacity onPress={() => navigation.navigate('AdDetails', { item })}>
       <View style={styles.rowItem1}>
-        <Image style={styles.imageRow1} source={{ uri: item.image1}} resizeMode="center" />
+        <Image style={styles.imageRow1} source={{ uri: item.image1 }} resizeMode="center" />
         <Text style={styles.textR1}>{item.text}</Text>
       </View>
     </TouchableOpacity>
   );
-  
+
   const Row2Render = ({ item }) => (
     <TouchableOpacity onPress={() => navigation.navigate('AdDetails', { item })}>
       <View style={styles.rowItem2}>
@@ -112,11 +112,11 @@ const Home = ({ navigation }) => {
       </View>
     </TouchableOpacity>
   );
-  
+
 
   const CategoriesRender = ({ item }) => (
     <TouchableOpacity onPress={() => {
-      console.log({item})
+      console.log({ item })
       navigation.navigate('Categories', { categoryName: item.text });
     }}>
       <View style={{ marginRight: 10, width: width * 0.3, height: height * 0.35 }}>
@@ -125,14 +125,15 @@ const Home = ({ navigation }) => {
       </View>
     </TouchableOpacity>
   );
-  
+
   const styles = StyleSheet.create({
     firstBanner: {
       width: width,
-      height:height*0.30,
+      height: height * 0.30,
+      // marginTop:10 
       // borderBottomLeftRadius:75,
       // borderBottomRightRadius:75,
-     
+
     },
     firstBannerText: {
       top: height * 0.18,
@@ -140,6 +141,7 @@ const Home = ({ navigation }) => {
       color: "white",
       fontSize: 23,
       fontWeight: "bold",
+      marginTop:10
     },
     container: {
       flex: 1,
@@ -150,7 +152,7 @@ const Home = ({ navigation }) => {
     },
     rowItem1: {
       width: width * 0.3,
-      marginHorizontal: 20,
+      marginHorizontal:30,
       height: height * 0.7
     },
     textR1: {
@@ -186,6 +188,7 @@ const Home = ({ navigation }) => {
       height: height * 0.23,
       width: width * 0.4,
       overflow: 'hidden',
+      // marginRight:20
     },
     textR2: {
       fontSize: 16,
@@ -198,7 +201,7 @@ const Home = ({ navigation }) => {
     },
     rowItem2: {
       width: width * 0.3,
-      marginHorizontal: 20,
+      marginHorizontal: 30,
       height: height * 0.32
     },
     cateImage: {
@@ -276,13 +279,15 @@ const Home = ({ navigation }) => {
               <Text style={styles.womenText}>
                 Women's Collection
               </Text>
-              <FlatList
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                data={row1Data}
-                renderItem={Row1Render}
-                keyExtractor={(item) => item.id.toString()}
-              />
+              <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}>
+                { row1Data.map((item) => (
+                  <View key={item.id.toString()}>
+                    {Row1Render({ item })}
+                    </View>
+                ))}
+              </ScrollView>
             </View>
 
             {/* Row 2 */}
@@ -290,13 +295,15 @@ const Home = ({ navigation }) => {
               <Text style={styles.menText}>
                 Men's Collection
               </Text>
-              <FlatList
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                data={row2Data}
-                renderItem={Row2Render}
-                keyExtractor={(item) => item.id.toString()}
-              />
+              <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}>
+                { row2Data.map((item) => (
+                  <View key={item.id.toString()}>
+                    {Row2Render({ item })}
+                    </View>
+                ))}
+              </ScrollView>
             </View>
 
             {/* Categories */}

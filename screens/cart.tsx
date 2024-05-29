@@ -33,6 +33,11 @@ const Cart = ({ navigation }) => {
     fetchCartItems();
   }, []);
 
+  // Calculate total price of the cart
+  const getTotalPrice = () => {
+    return cartItems.reduce((total, item) => total + parseInt(item.price, 10), 0);
+  };
+
   // Refresh indicator 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -52,23 +57,17 @@ const Cart = ({ navigation }) => {
       
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
-        const cartIndex = userData.cart.indexOf(itemToDelete);
+        const updatedCart = userData.cart.filter(item => item.id !== itemToDelete.id);
         
-        if (cartIndex) {
-          userData.cart.splice(cartIndex); // Remove the item from the cart array
-          await updateDoc(userDocRef, { cart: userData.cart }); // Update the user document with the modified cart array
-          setCartItems(userData.cart);
-          Alert.alert('Removed item from cart');
-        } else {
-          Alert.alert('Error', 'Item not found in cart');
-        }
+        await updateDoc(userDocRef, { cart: updatedCart });
+        setCartItems(updatedCart);
+        Alert.alert('Removed item from cart');
       }
     } catch (error) {
       console.error('Error deleting item from cart:', error);
       Alert.alert('Error', 'Could not delete item from cart');
     }
   };
-  
   
 
   const handleDeletePress = (item) => {
@@ -87,15 +86,15 @@ const Cart = ({ navigation }) => {
       flex: 1,
       padding: 20,
       backgroundColor: 'white',
-      paddingTop: height * 0.06
+      paddingTop: height * 0.06,
     },
     cartItem: {
       flexDirection: 'row',
       padding: 10,
       borderBottomWidth: 1,
       borderColor: '#ccc',
-      alignItems: 'center', // Align items vertically centered
-      justifyContent: 'space-between', // Distribute space between elements
+      alignItems: 'center',
+      justifyContent: 'space-between',
     },
     cartImage: {
       width: 50,
@@ -113,6 +112,16 @@ const Cart = ({ navigation }) => {
     deleteIcon: {
       padding: 10,
     },
+    totalPriceContainer: {
+      padding: 20,
+      borderTopWidth: 1,
+      borderColor: '#ccc',
+      alignItems: 'center',
+    },
+    totalPriceText: {
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
   });
 
   return (
@@ -129,23 +138,28 @@ const Cart = ({ navigation }) => {
     >
       <Text style={{ fontSize: 26, fontWeight: 'bold', marginBottom: 20 }}>Your Cart</Text>
       {cartItems.length > 0 ? (
-        cartItems.map((cartItem, index) => (
-          <View key={index} style={styles.cartItem}>
-            <TouchableOpacity
-              style={{ flexDirection: 'row', alignItems: 'center' }}
-              onPress={() => navigation.navigate('AdDetails', { item: cartItem })}
-            >
-              <Image source={{ uri: cartItem.image1 }} style={styles.cartImage} />
-              <View>
-                <Text style={styles.cartTitle}>{cartItem.title}</Text>
-                <Text style={styles.cartPrice}>Rs {cartItem.price}</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDeletePress(cartItem)}>
-              <Ionicons name="close-circle" size={24} color="red" style={styles.deleteIcon} />
-            </TouchableOpacity>
+        <>
+          {cartItems.map((cartItem, index) => (
+            <View key={index} style={styles.cartItem}>
+              <TouchableOpacity
+                style={{ flexDirection: 'row', alignItems: 'center' }}
+                onPress={() => navigation.navigate('AdDetails', { item: cartItem })}
+              >
+                <Image source={{ uri: cartItem.image1 }} style={styles.cartImage} />
+                <View>
+                  <Text style={styles.cartTitle}>{cartItem.title}</Text>
+                  <Text style={styles.cartPrice}>Rs {cartItem.price}</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleDeletePress(cartItem)}>
+                <Ionicons name="close-circle" size={24} color="red" style={styles.deleteIcon} />
+              </TouchableOpacity>
+            </View>
+          ))}
+          <View style={styles.totalPriceContainer}>
+            <Text style={styles.totalPriceText}>Total Price: Rs {getTotalPrice().toString()}</Text>
           </View>
-        ))
+        </>
       ) : (
         <Text style={{ textAlign: 'center', margin: 20 }}>Your cart is empty</Text>
       )}
