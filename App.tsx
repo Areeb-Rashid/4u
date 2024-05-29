@@ -15,6 +15,7 @@ import Search from "./screens/search";
 import AdDetails from "./screens/adDetails";
 import Authentication from "./screens/authenticate";
 import FullScreenImage from "./screens/fullScreenImage"
+import Categories from "./screens/categories";
 
 const App = () => {
   const [hideSplashScreen, setHideSplashScreen] = React.useState(true);
@@ -63,6 +64,11 @@ const App = () => {
             <Stack.Screen
               name="Home"
               component={Home}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Categories"
+              component={Categories}
               options={{ headerShown: false }}
             />
             <Stack.Screen

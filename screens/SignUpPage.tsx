@@ -122,7 +122,7 @@ const SignUpPage = ({ navigation }) => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <View style={styles.signUpPage}>
-          <View style={styles.fields}>
+          <View >
             {/* Image */}
             <TouchableOpacity style={styles.imgContainer} onPress={handleImage} activeOpacity={0.7}>
               {image ? (
@@ -193,7 +193,7 @@ const SignUpPage = ({ navigation }) => {
 
           {/* Signup Text */}
           <View style={[styles.navigationBarbigHeadline, styles.navigationPosition]}>
-            <Text style={[styles.headline, styles.orSignUpClr]}>Sign up</Text>
+            <Text style={[styles.headline]}>Sign up</Text>
             <View style={[styles.navigationBar, styles.navigationPosition]} />
           </View>
 

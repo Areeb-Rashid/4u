@@ -33,10 +33,10 @@ const Home = ({ navigation }) => {
           setSeller(false);
         }
       } else {
-        Alert.alert('User does not exist');
+        console.log('User does not exist');
       }
     } else {
-      Alert.alert('User not logged in');
+      console.log('User not logged in');
     }
   };
 
@@ -91,14 +91,14 @@ const Home = ({ navigation }) => {
     fetchAdsData().then(() => {
       setRefreshing(false);
     }).catch(() => {
-      setRefreshing(false);  // Ensure refreshing is reset in case of error
+      setRefreshing(false); 
     });
   }, []);
 
   const Row1Render = ({ item }) => (
     <TouchableOpacity onPress={() => navigation.navigate('AdDetails', { item })}>
       <View style={styles.rowItem1}>
-        <Image style={styles.imageRow1} source={{ uri: item.image1 }} resizeMode="center" />
+        <Image style={styles.imageRow1} source={{ uri: item.image1}} resizeMode="center" />
         <Text style={styles.textR1}>{item.text}</Text>
       </View>
     </TouchableOpacity>
@@ -116,9 +116,9 @@ const Home = ({ navigation }) => {
 
   const CategoriesRender = ({ item }) => (
     <TouchableOpacity onPress={() => {
-      navigation.navigate('AdDetails', { item })
       console.log({item})
-      }}>
+      navigation.navigate('Categories', { categoryName: item.text });
+    }}>
       <View style={{ marginRight: 10, width: width * 0.3, height: height * 0.35 }}>
         <Image style={styles.cateImage} source={item.imageUrl} resizeMode="cover" />
         <Text style={styles.categoriesItemText}>{item.text}</Text>
@@ -129,7 +129,10 @@ const Home = ({ navigation }) => {
   const styles = StyleSheet.create({
     firstBanner: {
       width: width,
-      // height:height
+      height:height*0.30,
+      // borderBottomLeftRadius:75,
+      // borderBottomRightRadius:75,
+     
     },
     firstBannerText: {
       top: height * 0.18,

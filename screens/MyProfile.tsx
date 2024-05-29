@@ -54,7 +54,7 @@ const MyProfile = ({navigation}) => {
    getImage()
   },[])
 
-  handleLogout = ()=>{
+  const handleLogout = ()=>{
     Alert.alert('Logout', "Sure want to logout?",
         [
           {

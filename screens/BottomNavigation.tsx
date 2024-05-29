@@ -37,10 +37,7 @@ const BottomNavigation = ()=> {
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
-      tabBarOptions={{
-        activeTintColor: 'red',
-        inactiveTintColor: 'gray',
-      }}
+     
     >
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Search" component={Search}/>

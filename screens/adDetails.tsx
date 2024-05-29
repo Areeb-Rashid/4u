@@ -4,7 +4,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, Dimensions, Alert } from 'react-native';
 import { GestureHandlerRootView, TouchableOpacity } from 'react-native-gesture-handler';
 import { auth } from './firebase';
-import { collection, doc, getFirestore, updateDoc, getDoc, arrayUnion } from 'firebase/firestore';
+import { collection, doc, getFirestore, updateDoc, getDoc, arrayUnion, setDoc } from 'firebase/firestore';
 
 const AdDetails = ({ route, navigation }) => {
   const { item } = route.params;  
